@@ -43,8 +43,8 @@ async def on_message(message):
 async def shitpost(ctx):
     '''Gets a random post from r/PrequelMemes and posts it'''
     try:
-        shitpostUrl = redditfacade.GetShitPostURL()
-        await bot.say(shitpostUrl)
+        shitpost = redditfacade.GetShitpost()
+        await bot.say(shitpost[0] + '\n' + shitpost[1])
     except:
         await bot.say('Impossible.\nPerhaps the archives are incomplete.\n<@' + ADMIN_ID + '> is the droid you\'re looking for to help with this message.')
         raise

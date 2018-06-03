@@ -10,7 +10,7 @@ reddit = praw.Reddit(client_id=dataloader.redditData['client-id'],
 reddit.read_only = True
 
 
-def GetShitPostURL():
+def GetShitpost():
     submissions = reddit.subreddit('prequelmemes').hot(limit=25)
 
     shitpostNumber = randint(0, 9)
@@ -19,5 +19,5 @@ def GetShitPostURL():
             if shitpostNumber > 0:
                 shitpostNumber = shitpostNumber - 1
             else:
-                return submission.url
+                return (submission.title, submission.url)
     return "ERROR: unable to find a shitpost"

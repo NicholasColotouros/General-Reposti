@@ -1,21 +1,18 @@
 import asyncio
+import dataloader
 import discord
-import json
 import re
-import redditcmds
+import redditfacade
 import shlex
 import sys
 
 from discord.ext import commands
 from subprocess import run
 
-with open('secret/data.json') as f:
-    data = json.load(f)
+BOT_TOKEN = dataloader.discordData['bot-token']
+ADMIN_ID = dataloader.discordData['admin-id']
 
-BOT_TOKEN = data['discord']['bot-token']
-ADMIN_ID = data['discord']['admin-id']
-
-bot = commands.Bot(command_prefix=data['discord']['cmd-prefix'], description='Hello there! I\'m General Reposti!\nMy only command is #Shitpost but it doesn\'t work right now.')
+bot = commands.Bot(command_prefix=dataloader.discordData['cmd-prefix'], description='Hello there! I\'m General Reposti!\nMy only command is #Shitpost but it doesn\'t work right now.')
 
 def is_admin(user):
     return user.id == ADMIN_ID
@@ -46,7 +43,7 @@ async def on_message(message):
 async def shitpost(ctx):
     '''Gets the top URL post from r/PrequelMemes and posts it'''
     try:
-        shitpostUrl = redditcmds.GetShitPostURL()
+        shitpostUrl = redditfacade.GetShitPostURL()
         await bot.say(shitpostUrl)
     except:
         await bot.say('Impossible.\nPerhaps the archives are incomplete.\n<@' + ADMIN_ID + '> is the droid you\'re looking for to help with this message.')

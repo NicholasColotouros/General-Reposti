@@ -24,9 +24,11 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
-    # meme text
     if re.search('general reposti', message.content, re.IGNORECASE):
-        if re.search('I hate you', message.content, re.IGNORECASE):
+        if re.search('help me', message.content, re.IGNORECASE):
+            #TODO: refactor this to a public JSON file or something to avoid hard cording
+            client.send_message(message.channel, "Hello there! I'm General Reposti. You can type !shitpost for me to post a meme, but that's under development")
+        elif re.search('I hate you', message.content, re.IGNORECASE):
             nameToReplyWith = message.author.name
             if(message.author.nick):
                 nameToReplyWith = message.author.nick
@@ -43,7 +45,7 @@ async def shitpost(ctx):
         shitpostUrl = redditcmds.GetShitPostURL()
         await client.send_message(shitpostUrl)
     except:
-        await client.send_message(ctx.message.channel, 'Impossible.\nPerhaps the archives are incomplete.\n<@' + ADMIN_ID + '> might have more info on this issue.')
+        await client.send_message(ctx.message.channel, 'Impossible.\nPerhaps the archives are incomplete.\n<@' + ADMIN_ID + '> is the droid you\'re looking for to help with this message.')
         raise
 
 client.run(BOT_TOKEN)

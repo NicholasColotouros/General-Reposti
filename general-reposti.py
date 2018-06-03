@@ -56,7 +56,7 @@ async def shitpost(ctx):
 async def reboot(ctx):
     '''Restarts General Reposti. Only works if you\'re the admin.'''
     if not is_admin(ctx.message.author):
-        await bot.say('You are on this counsel, but we do not grant you the rank of master.')
+        await bot.say('You are on this counsel, but we do not grant you the rank of master.\nOnly<@' + ADMIN_ID + '> can reboot me.')
     else:
         await bot.say("BOB coming back as a force ghost")
         run(shlex.split(r"""powershell.exe -file "start_bot.ps1" """))

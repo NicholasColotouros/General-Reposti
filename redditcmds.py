@@ -5,7 +5,7 @@ reddit = praw.Reddit(client_id='CLIENT_ID', client_secret="CLIENT_SECRET",
                      username='USERNAME')
 reddit.read_only = True
 
-def shitpost():
+def GetShitPostURL():
     submissions = reddit.subreddit('prequelmemes').hot(limit=10)
 
     for submission in submissions:

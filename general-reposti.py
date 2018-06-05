@@ -40,11 +40,17 @@ async def on_message(message):
     await bot.process_commands(message)
 
 @bot.command(description='Gets the top URL post from r/PrequelMemes and posts it', pass_context=True)
-async def shitpost(ctx):
+async def shitpost(ctx, subreddit : str = '/r/PrequelMemes'):
     '''Gets a random post from r/PrequelMemes and posts it'''
     try:
-        shitpost = redditfacade.GetShitpost()
-        await bot.say(shitpost[0] + '\n' + shitpost[1])
+        if redditfacade.is_valid_subreddit(subreddit):
+            if redditfacade.subreddit_exists(subreddit):
+                shitpost = redditfacade.get_shitpost(subreddit)
+                await bot.say('Post from ' + subreddit + ':\n' + shitpost[0] + '\n' + shitpost[1])
+            else:
+                await bot.say('Unable to find Subreddit: ' + subreddit)
+        else:
+            await bot.say('Subreddit must be in the for /r/PrequelMemes, r/PrequelMemes or PrequelMemes')
     except:
         await bot.say('Impossible.\nPerhaps the archives are incomplete.\n<@' + ADMIN_ID + '> is the droid you\'re looking for to help with this message.')
         raise
@@ -55,7 +61,7 @@ async def reboot(ctx):
     if not is_admin(ctx.message.author):
         await bot.say('You are on this counsel, but we do not grant you the rank of master.\nOnly<@' + ADMIN_ID + '> can reboot me.')
     else:
-        await bot.say("BRB coming back as a force ghost")
+        await bot.say("If you strike me down I shall become more powerful than you can possibly imagine.")
         run(shlex.split(r"""powershell.exe -file "start_bot.ps1" """))
         sys.exit(0)
 

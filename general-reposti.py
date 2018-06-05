@@ -7,6 +7,8 @@ import shlex
 import sys
 
 from discord.ext import commands
+from prawcore import NotFound
+from prawcore import Forbidden
 from subprocess import run
 
 BOT_TOKEN = dataloader.discordData['bot-token']
@@ -41,6 +43,7 @@ async def on_message(message):
 
 @bot.command(description='Gets the top URL post from r/PrequelMemes and posts it', pass_context=True)
 async def shitpost(ctx, subreddit : str = '/r/PrequelMemes'):
+    #TODO refactor this mess
     '''Gets a random post from r/PrequelMemes and posts it'''
     try:
         if redditfacade.is_valid_subreddit(subreddit):
@@ -51,6 +54,8 @@ async def shitpost(ctx, subreddit : str = '/r/PrequelMemes'):
                 await bot.say('Unable to find Subreddit: ' + subreddit)
         else:
             await bot.say('Subreddit must be in the for /r/PrequelMemes, r/PrequelMemes or PrequelMemes')
+    except Forbidden:
+        await bot.say('Subreddit ' + subreddit + ' is inaccessible. It might be banned or private.')
     except:
         await bot.say('Impossible.\nPerhaps the archives are incomplete.\n<@' + ADMIN_ID + '> is the droid you\'re looking for to help with this message.')
         raise

@@ -11,10 +11,10 @@ from prawcore import NotFound
 from prawcore import Forbidden
 from subprocess import run
 
-BOT_TOKEN = dataloader.discordData['bot-token']
-ADMIN_ID = dataloader.discordData['admin-id']
+BOT_TOKEN = dataloader.discord_data['bot-token']
+ADMIN_ID = dataloader.discord_data['admin-id']
 
-bot = commands.Bot(command_prefix=dataloader.discordData['cmd-prefix'], description='Hello there! I\'m General Reposti!')
+bot = commands.Bot(command_prefix=dataloader.discord_data['cmd-prefix'], description='Hello there! I\'m General Reposti!')
 
 def is_admin(user):
     return user.id == ADMIN_ID
@@ -31,10 +31,10 @@ async def on_message(message):
     # memes
     if re.search('general reposti', message.content, re.IGNORECASE):
         if re.search('I hate you', message.content, re.IGNORECASE):
-            nameToReplyWith = message.author.name
+            recipient_name_to_use = message.author.name
             if(message.author.nick):
-                nameToReplyWith = message.author.nick
-            await bot.send_message(message.channel, 'It\'s over ' + nameToReplyWith + '. I have the high ground!')
+                recipient_name_to_use = message.author.nick
+            await bot.send_message(message.channel, 'It\'s over ' + recipient_name_to_use + '. I have the high ground!')
         else:
             await bot.send_message(message.channel, 'Hello there!')
 

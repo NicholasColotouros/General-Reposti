@@ -2,5 +2,5 @@ import json
 
 with open('secret/data.json') as f:
     data = json.load(f)
-    discordData = data['discord']
-    redditData = data['reddit']
+    discord_data = data['discord']
+    reddit_data = data['reddit']

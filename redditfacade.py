@@ -7,9 +7,9 @@ from random import randint
 
 subreddit_regex_format = r"^((/?r/)?[a-z]+)$"
 
-reddit = praw.Reddit(client_id=dataloader.redditData['client-id'], 
-                    client_secret=dataloader.redditData['client-secret'],
-                    user_agent=dataloader.redditData['user-agent'])
+reddit = praw.Reddit(client_id=dataloader.reddit_data['client-id'], 
+                    client_secret=dataloader.reddit_data['client-secret'],
+                    user_agent=dataloader.reddit_data['user-agent'])
 reddit.read_only = True
 
 def strip_subreddit_prefix(subreddit : str):

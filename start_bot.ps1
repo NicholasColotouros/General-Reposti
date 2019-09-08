@@ -12,6 +12,6 @@ Catch
     $_.Exception.Message
 }
 # Start the bot
-$app = Start-Process -passthru -nonewwindow python general-reposti.py
+$app = Start-Process -passthru -nonewwindow python reposti.py
 # Store its pid in 'bot.pid' file
 echo $app.Id > $FILE

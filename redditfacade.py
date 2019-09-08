@@ -30,7 +30,7 @@ def get_shitpost(subreddit : str):
     shitpost_number = randint(0, 9)
     last_valid_shitpost = ("ERROR: ", "Unable to find shitpost")
     for submission in submissions:
-        if submission.url: # no self posts
+        if submission.url:
             if shitpost_number > 0:
                 shitpost_number = shitpost_number - 1
                 last_valid_shitpost = (submission.title, submission.url)

@@ -70,4 +70,5 @@ async def reboot(ctx):
         run(shlex.split(r"""powershell.exe -file "start_bot.ps1" """))
         sys.exit(0)
 
-bot.run(BOT_TOKEN)
+if __name__ == '__main__':
+    bot.run(BOT_TOKEN)

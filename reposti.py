@@ -12,12 +12,16 @@ from prawcore import Forbidden
 from subprocess import run
 
 BOT_TOKEN = dataloader.discord_data['bot-token']
+BOT_ID = dataloader.discord_data['bot-id']
 ADMIN_ID = dataloader.discord_data['admin-id']
 
 bot = commands.Bot(command_prefix=dataloader.discord_data['cmd-prefix'], description='Hello there! I\'m General Reposti!')
 
 def is_admin(user):
     return user.id == ADMIN_ID
+
+def is_reposti(user):
+    return user.id == BOT_ID
 
 @bot.event
 async def on_ready():
@@ -27,7 +31,16 @@ async def on_ready():
     print('------')
 
 @bot.event
+async def on_error(event):
+    print("Error raised: " + event)
+
+@bot.event
 async def on_message(message):
+
+    # prevent responding to our own messages
+    if is_reposti(message.author):
+        return
+
     # memes
     if re.search('general reposti', message.content, re.IGNORECASE):
         if re.search('I hate you', message.content, re.IGNORECASE):
@@ -69,6 +82,3 @@ async def reboot(ctx):
         await bot.say("If you strike me down I shall become more powerful than you can possibly imagine.")
         run(shlex.split(r"""powershell.exe -file "start_bot.ps1" """))
         sys.exit(0)
-
-if __name__ == '__main__':
-    bot.run(BOT_TOKEN)

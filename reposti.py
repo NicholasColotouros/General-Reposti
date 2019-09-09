@@ -41,15 +41,17 @@ async def on_message(message):
     if is_reposti(message.author):
         return
 
+    ctx = await bot.get_context(message)
+
     # memes
     if re.search('general reposti', message.content, re.IGNORECASE):
         if re.search('I hate you', message.content, re.IGNORECASE):
             recipient_name_to_use = message.author.name
             if(message.author.nick):
                 recipient_name_to_use = message.author.nick
-            await bot.send_message(message.channel, 'It\'s over ' + recipient_name_to_use + '. I have the high ground!')
+            await ctx.send('It\'s over ' + recipient_name_to_use + '. I have the high ground!')
         else:
-            await bot.send_message(message.channel, 'Hello there!')
+            await ctx.send('Hello there!')
 
     # process actual commands
     await bot.process_commands(message)
@@ -62,23 +64,23 @@ async def shitpost(ctx, subreddit : str = '/r/PrequelMemes'):
         if redditfacade.is_valid_subreddit(subreddit):
             if redditfacade.subreddit_exists(subreddit):
                 shitpost = redditfacade.get_shitpost(subreddit)
-                await bot.say('Post from ' + subreddit + ':\n' + shitpost[0] + '\n' + shitpost[1])
+                await ctx.send('Post from ' + subreddit + ':\n' + shitpost[0] + '\n' + shitpost[1])
             else:
-                await bot.say('Unable to find Subreddit: ' + subreddit)
+                await ctx.send('Unable to find Subreddit: ' + subreddit)
         else:
-            await bot.say('Subreddit must be in the for /r/PrequelMemes, r/PrequelMemes or PrequelMemes')
+            await ctx.send('Subreddit must be in the for /r/PrequelMemes, r/PrequelMemes or PrequelMemes')
     except Forbidden:
-        await bot.say('Subreddit ' + subreddit + ' is inaccessible. It might be banned or private.')
+        await ctx.send('Subreddit ' + subreddit + ' is inaccessible. It might be banned or private.')
     except:
-        await bot.say('Impossible.\nPerhaps the archives are incomplete.\n<@' + ADMIN_ID + '> is the droid you\'re looking for to help with this message.')
+        await ctx.send('Impossible.\nPerhaps the archives are incomplete.\n<@' + ADMIN_ID + '> is the droid you\'re looking for to help with this message.')
         raise
 
 @bot.command(description='Restarts General Reposti. Only works if you\'re the admin.', pass_context=True)
 async def reboot(ctx):
     '''Restarts General Reposti. Only works if you\'re the admin.'''
-    if not is_admin(ctx.message.author):
-        await bot.say('You are on this counsel, but we do not grant you the rank of master.\nOnly<@' + ADMIN_ID + '> can reboot me.')
+    if not is_admin(ctx.author):
+        await ctx.send('You are on this counsel, but we do not grant you the rank of master.\nOnly<@' + ADMIN_ID + '> can reboot me.')
     else:
-        await bot.say("If you strike me down I shall become more powerful than you can possibly imagine.")
+        await ctx.send("If you strike me down I shall become more powerful than you can possibly imagine.")
         run(shlex.split(r"""powershell.exe -file "start_bot.ps1" """))
         sys.exit(0)

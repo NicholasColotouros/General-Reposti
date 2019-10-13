@@ -5,7 +5,7 @@ import re
 from prawcore import NotFound
 from random import randint
 
-subreddit_regex_format = r"^((/?r/)?[a-z]+)$"
+subreddit_regex_format = r"^((/?r/)?[a-z_]+)$"
 
 reddit = praw.Reddit(client_id=dataloader.reddit_data['client-id'], 
                     client_secret=dataloader.reddit_data['client-secret'],

@@ -1,4 +1,5 @@
 import sys
+import betting
 import reposti
 import reddit
 import system

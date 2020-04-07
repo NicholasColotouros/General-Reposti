@@ -5,8 +5,8 @@ import discord
 from discord.ext import commands
 
 BOT_TOKEN = dataloader.discord_data['bot-token']
-BOT_ID = dataloader.discord_data['bot-id']
-ADMIN_ID = dataloader.discord_data['admin-id']
+BOT_ID = int(dataloader.discord_data['bot-id'])
+ADMIN_ID = int(dataloader.discord_data['admin-id'])
 
 bot = commands.Bot(command_prefix=dataloader.discord_data['cmd-prefix'], description='Hello there! I\'m General Reposti!')
 

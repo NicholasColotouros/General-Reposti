@@ -3,7 +3,7 @@ import reposti
 
 class BettingInfo:
     _accounts = {}
-    _currentBets = {{}}
+    _currentBets = {}
     _contestant1 = ""
     _contestant2 = ""
     _bettingAllowed = False
@@ -47,40 +47,61 @@ BettingInfo = BettingInfo()
 
 
 @reposti.bot.command(pass_context=True)
-async with Lock def bet(ctx, amount : float, contestant : str):
-    if BettingInfo.IsBettingAllowed():
-        if not BettingInfo.IsValidContestant(contestant):
-            await ctx.send(contestant + ' is not a valid contestant. The current matchup is ' + Contestant1 + ' vs ' + Contestant2)
+async def bet(ctx, amount : float, contestant : str):
+    await Lock.acquire()
+    try:
+        if BettingInfo.IsBettingAllowed():
+            if not BettingInfo.IsValidContestant(contestant):
+                await ctx.send(contestant + ' is not a valid contestant. The current matchup is ' + Contestant1 + ' vs ' + Contestant2)
+            else:
+                # TODO trim float to 2 decimals
+                strID = str(ctx.message.author.id)
+                BettingInfo.Bet(strID, contestant, amount)
+                await ctx.send('<@' + strID + '> is betting: ' + str(amount) + ' on ' + contestant)
         else:
-            # TODO trim float to 2 decimals
-            strID = str(ctx.message.author.id)
-            BettingInfo.Bet(strID, contestant, amount)
-            await ctx.send('<@' + strID + '> is betting: ' + str(amount) + ' on ' + contestant)
-    else:
-        await ctx.send('Betting is not currently allowed.')
+            await ctx.send('Betting is not currently allowed.')
+    finally:
+        Lock.release()
+
+# TODO getters for current bets
+# TODO getters for current accounts
 
 ######## Admin commands ########
 @reposti.bot.command(description='(admin) start betting', pass_context=True)
-async with Lock def bet_start(ctx, p1 : str, p2 : str):
-    if not reposti.is_admin(ctx.author):
-        await ctx.send('You are on this counsel, but we do not grant you the rank of master.\nOnly<@' + reposti.ADMIN_ID + '> can do this.')
-    else:
-        BettingInfo.StartBet(p1, p2)
-        await ctx.send('Taking bets for ' + p1 + ' vs. ' + p2)
+async def bet_start(ctx, p1 : str, p2 : str):
+    await Lock.acquire()
+    try:
+        if not reposti.is_admin(ctx.author):
+            await ctx.send('You are on this counsel, but we do not grant you the rank of master.\nOnly<@' + reposti.ADMIN_ID + '> can do this.')
+        else:
+            BettingInfo.StartBetting(p1, p2)
+            await ctx.send('Taking bets for ' + p1 + ' vs. ' + p2)
+    finally:
+        Lock.release()
         
 
 @reposti.bot.command(description='(admin) end betting', pass_context=True)
-async with Lock def bet_end(ctx):
-    if not reposti.is_admin(ctx.author):
-        await ctx.send('You are on this counsel, but we do not grant you the rank of master.\nOnly<@' + reposti.ADMIN_ID + '> can do this.')
-    else:
-        BettingInfo.EndBetting()
-        await ctx.send('Betting closed! No more bets for the current match.')
+async def bet_end(ctx):
+    await Lock.acquire()
+    try:
+        if not reposti.is_admin(ctx.author):
+            await ctx.send('You are on this counsel, but we do not grant you the rank of master.\nOnly<@' + reposti.ADMIN_ID + '> can do this.')
+        else:
+            BettingInfo.EndBetting()
+            await ctx.send('Betting closed! No more bets for the current match.')
+    finally:
+        Lock.release()
 
 @reposti.bot.command(description='(admin) Reset all accounts', pass_context=True)
-async with Lock def bet_reset(ctx):
-    if not reposti.is_admin(ctx.author):
-        await ctx.send('You are on this counsel, but we do not grant you the rank of master.\nOnly<@' + reposti.ADMIN_ID + '> can do this.')
-    else:
-        BettingInfo = BettingInfo()
-        await ctx.send('All accounts reset')
+async def bet_reset(ctx):
+    await Lock.acquire()
+    try:
+        if not reposti.is_admin(ctx.author):
+            await ctx.send('You are on this counsel, but we do not grant you the rank of master.\nOnly<@' + reposti.ADMIN_ID + '> can do this.')
+        else:
+            BettingInfo = BettingInfo()
+            await ctx.send('All accounts reset')
+    finally:
+        Lock.release()
+
+# TODO payout function

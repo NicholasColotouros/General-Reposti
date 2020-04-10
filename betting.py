@@ -1,22 +1,37 @@
 import asyncio
+import json
 import reposti
 
+from pathlib import Path
+
+class NoMoneyToBetError(Exception):
+    """You're betting money you don't have"""
+    pass
+
+class NonPositiveBetError(Exception):
+    """You can only bet positive amounts of money"""
+    pass
+
+BETTING_ACCOUNTS_PATH = "secret/BettingAccounts.json"
 class BettingInfo:
     _accounts = {}
     _currentBets = {}
     _contestant1 = ""
     _contestant2 = ""
+    _matchup = ""
     _bettingAllowed = False
 
-    # TODO
-    # def LoadFromJSon(path : str)
-    # def SaveToJSon(path : str)
-
     def __init__(self):
-        self._accounts = {}
+        if Path(BETTING_ACCOUNTS_PATH).is_file():
+            with open(BETTING_ACCOUNTS_PATH) as f: 
+                self._accounts = json.load(f)
+        else:
+            self._accounts = {}
+
         self._currentBets = {}
         self._contestant1 = ""
         self._contestant2 = ""
+        self._matchup = ""
 
     def GetAccount(self, userID : str):
         if not userID in self._accounts:
@@ -26,10 +41,9 @@ class BettingInfo:
     def GetCurrentBet(self, userID : str):
         if not self.IsBettingAllowed():
             return None
-        if userID in self._currentBets[self._contestant1]:
-            return (self._contestant1, self._currentBets[self._contestant1][userID])
-        if userID in self._currentBets[self._contestant2]:
-            return (self._contestant2, self._currentBets[self._contestant2][userID])
+        
+        if userID in self._currentBets[userID]:
+            return (self._currentBets[userID][0], self._currentBets[userID][1])
         else:
             return None
 
@@ -38,14 +52,13 @@ class BettingInfo:
         if not userID in self._accounts:
             self._accounts[userID] = float(10000)
         
+        # You can't bet money you can't have
         if self._accounts[userID] < amount:
-            raise
+            raise NoMoneyToBetError
+        if amount <= 0:
+            raise NonPositiveBetError
 
-        contestant = contestant.lower()
-        if not contestant in self._currentBets:
-            self._currentBets[contestant] = {}
-        
-        self._currentBets[contestant][userID] = amount
+        self._currentBets[userID] = (contestant, amount)
 
     def IsBettingAllowed(self):
         return self._bettingAllowed
@@ -53,8 +66,13 @@ class BettingInfo:
     def StartBetting(self, p1 : str, p2 : str):
         # TODO clear existing bets
         # TODO check that betting is not in progress
+        self._matchup = p1 + ' vs. ' + p2
         self._contestant1 = p1.lower()
         self._contestant2 = p2.lower()
+
+        if(self._contestant1 == self._contestant2):
+            self.StartBetting(p1 + '1', p2 + '2')
+
         self._bettingAllowed = True
 
     def EndBetting(self):
@@ -67,31 +85,37 @@ class BettingInfo:
         self._bettingAllowed = False
         self._currentBets = {}
 
-    def CalculateResults(self, winner : str):
-        winner = winner.lower()
+    def CalculateResults(self, declaredWinner : str):
+        declaredWinner = declaredWinner.lower()
 
         # IDEA FOR PAYOUT FUNCTION: Max(2x or #BettingAgainst / #BettingFor)
-        if winner != self._contestant1 and winner !=  self._contestant2:
+        if declaredWinner != self._contestant1 and declaredWinner !=  self._contestant2:
             return None
         else:
             winner = self._contestant1
             loser = self._contestant2
 
-            if(winner == self._contestant2):
+            if(declaredWinner == self._contestant2):
                 winner = self._contestant2
                 loser = self._contestant1
 
+            lossModifier = -1
+            winModifier = 2 # TODO calculate better odds here
+
             results = []
-            for contestant, bets in self._currentBets.items():
-                winningsModifier = -1
+            for userID, bet in self._currentBets.items():
+                contestant = bet[0]
+                betAmount = bet[1]
+
+                winningsModifier = lossModifier
                 if contestant == winner:
-                    winningsModifier = 2# TODO calculate better odds here
-                
-                for userID, betAmount in bets.items():
-                    amountWon = betAmount * winningsModifier
-                    self._accounts[userID] += amountWon
-                    results.append((userID, betAmount, self._accounts[userID]))
+                    winningsModifier = winModifier
+
+                amountWon = betAmount * winningsModifier
+                self._accounts[userID] += amountWon
+                results.append((userID, amountWon, self._accounts[userID]))
             
+            self._save()
             return results
 
     def IsValidContestant(self, contestant : str):
@@ -99,7 +123,12 @@ class BettingInfo:
         return self._contestant1 == contestant or self._contestant2 == contestant
     
     def GetCurrentMatchup(self):
-        return self._contestant1 + ' vs ' + self._contestant2
+        return self._matchup
+
+    def _save(self):
+        with open(BETTING_ACCOUNTS_PATH, 'w') as f:
+            json.dump(self._accounts, f)
+
 
 Lock = asyncio.Lock()
 BettingInfo = BettingInfo()
@@ -118,8 +147,10 @@ async def bet(ctx, amount : float, contestant : str):
                 try:
                     BettingInfo.Bet(strID, contestant, amount)
                     await ctx.send('<@' + strID + '> is betting: ' + str(amount) + ' on ' + contestant)
-                except:
+                except NoMoneyToBetError:
                     await ctx.send('<@' + strID + '> -- You cannot bet more than you have! You have ' + str(BettingInfo.GetAccount(strID)) + ' in the bank.')
+                except NonPositiveBetError:
+                    await ctx.send('<@' + strID + '> -- You must bet a positive amount of money instead of ' + str(amount))
         else:
             await ctx.send('Betting is not currently allowed.')
     finally:

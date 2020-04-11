@@ -16,9 +16,9 @@ BETTING_ACCOUNTS_PATH = "secret/BettingAccounts.json"
 class BettingInfo:
     _accounts = {}
     _currentBets = {}
-    _contestant1 = ""
-    _contestant2 = ""
-    _matchup = ""
+    _contestant1 = ''
+    _contestant2 = ''
+    _matchup = ''
     _bettingAllowed = False
 
     def __init__(self):
@@ -29,26 +29,28 @@ class BettingInfo:
             self._accounts = {}
 
         self._currentBets = {}
-        self._contestant1 = ""
-        self._contestant2 = ""
-        self._matchup = ""
+        self._contestant1 = ''
+        self._contestant2 = ''
+        self._matchup = ''
 
     def GetAccount(self, userID : str):
         if not userID in self._accounts:
             self._accounts[userID] = float(10000)
         return self._accounts[userID]
 
-    def GetCurrentBet(self, userID : str):
-        if not self.IsBettingAllowed():
-            return None
-        
-        if userID in self._currentBets[userID]:
-            return (self._currentBets[userID][0], self._currentBets[userID][1])
-        else:
+    def GetCurrentBets(self):
+        result = self.GetCurrentMatchup()
+        if result == '' and not self.IsBettingAllowed():
             return None
 
+        result += '\n'
+        for userID, bet in self._currentBets.items():
+            result += '<@' + userID + '> bet ' + '${:,.2f}'.format(bet[1]) + ' on ' + bet[0] + '\n'
+
+        return result
 
     def Bet(self, userID : str, contestant : str, amount : float):
+        contestant = contestant.lower()
         if not userID in self._accounts:
             self._accounts[userID] = float(10000)
         
@@ -100,7 +102,7 @@ class BettingInfo:
                 loser = self._contestant1
 
             lossModifier = -1
-            winModifier = 2 # TODO calculate better odds here
+            winModifier = self._getWinningModifier(declaredWinner)
 
             results = []
             for userID, bet in self._currentBets.items():
@@ -129,12 +131,28 @@ class BettingInfo:
         with open(BETTING_ACCOUNTS_PATH, 'w') as f:
             json.dump(self._accounts, f)
 
+    # modifier is max(2x, #against/#for)
+    def _getWinningModifier(self, winner : str):
+        modifier = 2 # Odds are 
+        betForWinner = 0
+        betForLoser = 0
+        for userID, bet in self._currentBets.items():
+            contestant = bet[0]        
+            if contestant == winner:
+                betForWinner += 1
+            else:
+                betForLoser += 1
+
+        if betForWinner == 0:
+            return modifier
+        return max(2, float(betForLoser) / float(betForWinner))
+
 
 Lock = asyncio.Lock()
 BettingInfo = BettingInfo()
 
 
-@reposti.bot.command(pass_context=True)
+@reposti.bot.command(brief='Bet on a contestant. \'Example: bet 21.12 on ROB\'', pass_context=True)
 async def bet(ctx, amount : float, contestant : str):
     await Lock.acquire()
     try:
@@ -146,7 +164,7 @@ async def bet(ctx, amount : float, contestant : str):
                 strID = str(ctx.message.author.id)
                 try:
                     BettingInfo.Bet(strID, contestant, amount)
-                    await ctx.send('<@' + strID + '> is betting: ' + str(amount) + ' on ' + contestant)
+                    await ctx.send('<@' + strID + '> is betting: ' + '${:,.2f}'.format(amount) + ' on ' + contestant)
                 except NoMoneyToBetError:
                     await ctx.send('<@' + strID + '> -- You cannot bet more than you have! You have ' + str(BettingInfo.GetAccount(strID)) + ' in the bank.')
                 except NonPositiveBetError:
@@ -156,37 +174,35 @@ async def bet(ctx, amount : float, contestant : str):
     finally:
         Lock.release()
 
-
-# TODO format the amount as currency
-@reposti.bot.command(pass_context=True)
+@reposti.bot.command(brief='Get the bank account total for the current user.', pass_context=True)
 async def bet_get_account(ctx):
     await Lock.acquire()
     try:
         strID = str(ctx.message.author.id)
         amount = BettingInfo.GetAccount(strID)
-        await ctx.send('<@' + strID + '> has $' + str(amount) + ' in their account.')
+        await ctx.send('<@' + strID + '> has ' + '${:,.2f}'.format(amount) + ' in their account.')
     finally:
         Lock.release()
 
-# TODO format the amount as currency
-@reposti.bot.command(pass_context=True)
+@reposti.bot.command(brief='Get the currently active bets for all participants.', pass_context=True)
 async def bet_get(ctx):
     await Lock.acquire()
     try:
-        strID = str(ctx.message.author.id)
-        result = BettingInfo.GetCurrentBet(strID)
-        
-        bet = 'no active bets.'
-        if result is not None:
-            bet = '$' + str(result[1]) + ' on ' + result[0]
+        if not BettingInfo.IsBettingAllowed:
+            await ctx.send('There is no currently active bet or betting has closed.')
+            return
 
-        await ctx.send('<@' + strID + '> has ' + bet)
+        result = BettingInfo.GetCurrentBets()        
+        if result is None:
+            await ctx.send('There are no active bets.')
+        else:
+            await ctx.send(result)
     finally:
         Lock.release()
 
 
 ######## Admin commands ########
-@reposti.bot.command(description='(admin) start betting', pass_context=True)
+@reposti.bot.command(brief='(admin) start betting', pass_context=True)
 async def bet_start(ctx, p1 : str, p2 : str):
     await Lock.acquire()
     try:
@@ -199,7 +215,7 @@ async def bet_start(ctx, p1 : str, p2 : str):
         Lock.release()
         
 
-@reposti.bot.command(description='(admin) end betting', pass_context=True)
+@reposti.bot.command(brief='(admin) end betting', pass_context=True)
 async def bet_close(ctx):
     await Lock.acquire()
     try:
@@ -211,7 +227,7 @@ async def bet_close(ctx):
     finally:
         Lock.release()
 
-@reposti.bot.command(description='(admin) calculate bet results', pass_context=True)
+@reposti.bot.command(brief='(admin) calculate bet results', pass_context=True)
 async def bet_result(ctx, winner : str):
     await Lock.acquire()
     try:
@@ -226,12 +242,13 @@ async def bet_result(ctx, winner : str):
 
                 resultsMsg = winner + ' takes the match!\n\n**Results:**\n'
                 for userID, winnings, total in results:
-                    resultsMsg += '<@' + userID + '> wins $' + str(winnings) + '. $' + str(total) + ' left in the bank.\n'
+                    # TODO make wins be loses
+                    resultsMsg += '<@' + userID + '> wins ' + '${:,.2f}'.format(winnings) + ' and has $' + '${:,.2f}'.format(total) + ' left in the bank.\n'
                 await ctx.send(resultsMsg)
     finally:
         Lock.release()
 
-@reposti.bot.command(description='(admin) Reset all accounts', pass_context=True)
+@reposti.bot.command(brief='(admin) Reset all accounts', pass_context=True)
 async def bet_reset(ctx):
     await Lock.acquire()
     try:

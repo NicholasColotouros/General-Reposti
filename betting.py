@@ -90,7 +90,6 @@ class BettingInfo:
     def CalculateResults(self, declaredWinner : str):
         declaredWinner = declaredWinner.lower()
 
-        # IDEA FOR PAYOUT FUNCTION: Max(2x or #BettingAgainst / #BettingFor)
         if declaredWinner != self._contestant1 and declaredWinner !=  self._contestant2:
             return None
         else:
@@ -242,8 +241,11 @@ async def bet_result(ctx, winner : str):
 
                 resultsMsg = winner + ' takes the match!\n\n**Results:**\n'
                 for userID, winnings, total in results:
-                    # TODO make wins be loses
-                    resultsMsg += '<@' + userID + '> wins ' + '${:,.2f}'.format(winnings) + ' and has $' + '${:,.2f}'.format(total) + ' left in the bank.\n'
+                    winsMsg = ' wins '
+                    if(winnings < 0):
+                        winsMsg = ' loses '
+
+                    resultsMsg += '<@' + userID + '>' + winsMsg + '${:,.2f}'.format(abs(winnings)) + ' and has ' + '${:,.2f}'.format(total) + ' left in the bank.\n'
                 await ctx.send(resultsMsg)
     finally:
         Lock.release()

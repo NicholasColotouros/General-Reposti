@@ -33,6 +33,12 @@ class BettingInfo:
         self._contestant2 = ''
         self._matchup = ''
 
+    def GetModifierText(self):
+        c1Modifier = self._getWinningModifier(self._contestant1)
+        c2Modifier = self._getWinningModifier(self._contestant2)
+
+        return self._contestant1 + ' pays out ' + str(c1Modifier) + 'x.\n' + self._contestant2 + ' pays out ' + str(c2Modifier) + 'x\n'
+
     def GetAccount(self, userID : str):
         if not userID in self._accounts:
             self._accounts[userID] = float(10000)
@@ -43,7 +49,7 @@ class BettingInfo:
         if result == '' and not self.IsBettingAllowed():
             return None
 
-        result += '\n'
+        result += '\n\n' + self.GetModifierText()
         for userID, bet in self._currentBets.items():
             result += '<@' + userID + '> bet ' + '${:,.2f}'.format(bet[1]) + ' on ' + bet[0] + '\n'
 
@@ -130,9 +136,8 @@ class BettingInfo:
         with open(BETTING_ACCOUNTS_PATH, 'w') as f:
             json.dump(self._accounts, f)
 
-    # modifier is max(2x, #against/#for)
+    # modifier is max(2x, #against/#for) -- I should probably cache this for perf
     def _getWinningModifier(self, winner : str):
-        modifier = 2 # Odds are 
         betForWinner = 0
         betForLoser = 0
         for userID, bet in self._currentBets.items():
@@ -143,8 +148,8 @@ class BettingInfo:
                 betForLoser += 1
 
         if betForWinner == 0:
-            return modifier
-        return max(2, float(betForLoser) / float(betForWinner))
+            return float(2)
+        return float(max(2, float(betForLoser) / float(betForWinner)))
 
 
 Lock = asyncio.Lock()
@@ -163,7 +168,7 @@ async def bet(ctx, amount : float, contestant : str):
                 strID = str(ctx.message.author.id)
                 try:
                     BettingInfo.Bet(strID, contestant, amount)
-                    await ctx.send('<@' + strID + '> is betting: ' + '${:,.2f}'.format(amount) + ' on ' + contestant)
+                    await ctx.send('<@' + strID + '> is betting: ' + '${:,.2f}'.format(amount) + ' on ' + contestant + '.\n\n' + BettingInfo.GetModifierText())
                 except NoMoneyToBetError:
                     await ctx.send('<@' + strID + '> -- You cannot bet more than you have! You have ' + str(BettingInfo.GetAccount(strID)) + ' in the bank.')
                 except NonPositiveBetError:

@@ -211,7 +211,7 @@ async def bet_start(ctx, p1 : str, p2 : str):
     await Lock.acquire()
     try:
         if not reposti.is_admin(ctx.author):
-            await ctx.send('You are on this counsel, but we do not grant you the rank of master.\nOnly<@' + reposti.ADMIN_ID + '> can do this.')
+            await ctx.send('You are on this counsel, but we do not grant you the rank of master.\nOnly<@' + str(reposti.ADMIN_ID) + '> can do this.')
         else:
             BettingInfo.StartBetting(p1, p2)
             await ctx.send('Taking bets for ' + BettingInfo.GetCurrentMatchup())
@@ -224,7 +224,7 @@ async def bet_close(ctx):
     await Lock.acquire()
     try:
         if not reposti.is_admin(ctx.author):
-            await ctx.send('You are on this counsel, but we do not grant you the rank of master.\nOnly<@' + reposti.ADMIN_ID + '> can do this.')
+            await ctx.send('You are on this counsel, but we do not grant you the rank of master.\nOnly<@' + str(reposti.ADMIN_ID) + '> can do this.')
         else:
             BettingInfo.EndBetting()
             await ctx.send('Betting closed! No more bets for the current match.')
@@ -236,7 +236,7 @@ async def bet_result(ctx, winner : str):
     await Lock.acquire()
     try:
         if not reposti.is_admin(ctx.author):
-            await ctx.send('You are on this counsel, but we do not grant you the rank of master.\nOnly<@' + reposti.ADMIN_ID + '> can do this.')
+            await ctx.send('You are on this counsel, but we do not grant you the rank of master.\nOnly<@' + str(reposti.ADMIN_ID) + '> can do this.')
         else:
             results = BettingInfo.CalculateResults(winner)
             if results is None:
@@ -260,7 +260,7 @@ async def bet_reset(ctx):
     await Lock.acquire()
     try:
         if not reposti.is_admin(ctx.author):
-            await ctx.send('You are on this counsel, but we do not grant you the rank of master.\nOnly<@' + reposti.ADMIN_ID + '> can do this.')
+            await ctx.send('You are on this counsel, but we do not grant you the rank of master.\nOnly<@' + str(reposti.ADMIN_ID) + '> can do this.')
         else:
             BettingInfo = BettingInfo()
             await ctx.send('All accounts reset')

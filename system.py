@@ -43,7 +43,7 @@ async def on_message(message):
 async def reboot(ctx):
     '''Restarts General Reposti. Only works if you\'re the admin.'''
     if not reposti.is_admin(ctx.author):
-        await ctx.send('You are on this counsel, but we do not grant you the rank of master.\nOnly<@' + reposti.ADMIN_ID + '> can reboot me.')
+        await ctx.send('You are on this counsel, but we do not grant you the rank of master.\nOnly<@' + str(reposti.ADMIN_ID) + '> can reboot me.')
     else:
         await ctx.send("If you strike me down I shall become more powerful than you can possibly imagine.")
         run(shlex.split(r"""powershell.exe -file "start_bot.ps1" """))

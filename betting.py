@@ -266,5 +266,3 @@ async def bet_reset(ctx):
             await ctx.send('All accounts reset')
     finally:
         Lock.release()
-
-# TODO payout function

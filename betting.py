@@ -44,6 +44,9 @@ class BettingInfo:
             self._accounts[userID] = float(10000)
         return self._accounts[userID]
 
+    def GetAccounts(self):
+        return self._accounts
+
     def GetCurrentBets(self):
         result = self.GetCurrentMatchup()
         if result == '' and not self.IsBettingAllowed():
@@ -185,6 +188,20 @@ async def bet_get_account(ctx):
         strID = str(ctx.message.author.id)
         amount = BettingInfo.GetAccount(strID)
         await ctx.send('<@' + strID + '> has ' + '${:,.2f}'.format(amount) + ' in their account.')
+    finally:
+        Lock.release()
+
+@reposti.bot.command(brief='Shows all accounts', pass_context=True)
+async def bet_get_all_accounts(ctx):
+    await Lock.acquire()
+    try:
+        accounts = BettingInfo.GetAccounts()
+
+        msg = ''
+        for userID, amount in accounts.items():
+            msg = msg + '<@' + userID + '> has ' + '${:,.2f}'.format(amount) + ' in their account.\n'
+
+        await ctx.send(msg)
     finally:
         Lock.release()
 
